@@ -53,6 +53,8 @@ public class Main {
 			
 		diccionario.imprimirInverseDocumentFrequencyForAllSchemes("pedro");
 		
+		System.out.println("Le argegue la siguiente cantidad de Documentos al diccionario "+diccionario.getCantidadDeDocumentos());
+		
 		
 		System.out.println("Chau Mundo!");
 	}

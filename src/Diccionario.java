@@ -192,26 +192,75 @@ public class Diccionario {
 		System.out.println("probabilistic inverse document frequency: "+this.InverseDocumentFrequency(term, "probabilistic inverse document frequency"));
 		
 	}
+	
+	
+	public int getCantidadDeDocumentosQueTienenPalabra(String term){
+		DiccionarioItem item = this.getDiccionarioItem(term);
+		return item.getListaDeDocumentosQueContienenLaPalabraRaiz().size();
+	}
+	
+	
+	public DiccionarioItem getDiccionarioItemQueSeReptireMasEnTodoElCorpus(){
+		int cantidad = 0 ;
+		DiccionarioItem elMasRepetido = null;
+		for(DiccionarioItem di : listaDeItems){
+			if(cantidad<di.getCantidadDeVecesQueSeRepiteEnTodosLosDocumentos()){
+				cantidad = di.getCantidadDeVecesQueSeRepiteEnTodosLosDocumentos();
+				elMasRepetido = di;
+			}
+			
+		}
+		return elMasRepetido;
+	}
+	
+	
+	public int getCantidadDeDocumentos(){
+		List<String> documentosDistintos = new ArrayList<String>();
+		for (DiccionarioItem item : listaDeItems) {
+			List<Documento> documentos = item.getListaDeDocumentosQueContienenLaPalabraRaiz();
+			for(Documento d : documentos){
+				boolean yaEstaEnLaListaDeDocumentosDistintos = false;
+				for(String documentoDistinto : documentosDistintos){
+					if(documentoDistinto.equals(d.getNombreDelDocumento())){
+						yaEstaEnLaListaDeDocumentosDistintos = true;
+						break;
+					}
+				}
+				if(!yaEstaEnLaListaDeDocumentosDistintos){
+					documentosDistintos.add(d.getNombreDelDocumento());
+				}
+				yaEstaEnLaListaDeDocumentosDistintos = false;
+			}
+			
+		}
+		return documentosDistintos.size();
+	}
 
 	private double InverseDocumentFrequency(String term, String weightingScheme) {
 		
+		DiccionarioItem item = this.getDiccionarioItem(term);
 		
-		if(weightingScheme.equals("unary")){
-			
-			
-		}if(weightingScheme.equals("inverse document frequency")){
-			
-		}if(weightingScheme.equals("inverse document frequency smooth")){
-			
-		}if(weightingScheme.equals("inverse document frequency max")){
-			
-		}if(weightingScheme.equals("probabilistic inverse document frequency")){
+		if(item == null){
+			return -1.0;
 			
 		}
+		List<Documento> documentos = item.getListaDeDocumentosQueContienenLaPalabraRaiz();
 		
 		
-		
-		
+		if(weightingScheme.equals("unary")){
+			return 1.0;
+		}if(weightingScheme.equals("inverse document frequency")){
+			
+			return Math.log(getCantidadDeDocumentos()/this.getCantidadDeDocumentosQueTienenPalabra(term));
+			
+		}if(weightingScheme.equals("inverse document frequency smooth")){
+			return Math.log(1+getCantidadDeDocumentos()/this.getCantidadDeDocumentosQueTienenPalabra(term));
+			
+		}if(weightingScheme.equals("inverse document frequency max")){
+			return Math.log(1+this.getDiccionarioItemQueSeReptireMasEnTodoElCorpus().getCantidadDeVecesQueSeRepiteEnTodosLosDocumentos()/this.getCantidadDeDocumentosQueTienenPalabra(term));
+		}if(weightingScheme.equals("probabilistic inverse document frequency")){
+			return Math.log((getCantidadDeDocumentos()-this.getCantidadDeDocumentosQueTienenPalabra(term))/this.getCantidadDeDocumentosQueTienenPalabra(term));
+		}		
 		return -1.0;
 	}
 
