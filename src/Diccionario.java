@@ -108,9 +108,184 @@ public class Diccionario {
 		}
 
 	}
+	
+	public double cantidadDePalabrasDeTodoElCorpus(){
+		List<String> documentosDistintos = this.getDocumentosDistintos();
+		double cantidadDePalabras = 0.0;
+		for(String documento : documentosDistintos){
+			cantidadDePalabras = cantidadDePalabras + this.getCantidadDePalabrasDelDocumento(documento);
+			
+		}
+		
+		return cantidadDePalabras;
+	}
+	
+	
+	public double avgdl(){
+		return cantidadDePalabrasDeTodoElCorpus()/this.getDocumentosDistintos().size();
+		
+	}
+	
+	
+	public void imprimirTFIDFParaTodosLosDocumentos(String palabra){
+		this.setTFIDFForAllTermsForAllDocuments(3);
+		palabra = new HalladorDeRaicesDePalabras().getRaiz(palabra);
+		DiccionarioItem di = this.getDiccionarioItem(palabra);
+		for(Documento d : di.getListaDeDocumentosQueContienenLaPalabraRaiz()){
+			System.out.println("Para la palabra "+palabra+ " el documento "+d.getNombreDelDocumento()+" tiene un TFIDF de "+d.getTFIDF()+" siendo que en el documento se repiten "+d.cantidadDeVecesQueSeRepiteLaPalabraRaiz());
+			
+		}
+		
+		
+	}
+	
+	public double IDF(String queryItem){
+		return Math.log((this.getCantidadDeDocumentos()-this.getCantidadDeDocumentosQueTienenPalabra(queryItem)+0.5)/(this.getCantidadDeDocumentosQueTienenPalabra(queryItem)+0.5));
+		
+		
+	}
+	
+	public double OkapiBM25(String document, String query){
+		
+		String[] querytokens = query.split(" ");
+		double score = 0 ;
+		double k = 1.5;
+		double b = 0.75;
+		for(int i = 0; i<querytokens.length; i++){
+			String oneToken = new HalladorDeRaicesDePalabras().getRaiz(querytokens[i]);
+			score = score + IDF(oneToken)*((this.termFrecuency(oneToken, document, "log normalization", -1.0)*(k+1))/(this.termFrecuency(oneToken, document, "log normalization", -1.0)+k*(1-b+b*this.getCantidadDePalabrasDelDocumento(document)/this.avgdl())));
+		}
+		return score;
+	}
+	
+	public void buscarDocumentos(String query){
+		setTFIDFForAllTermsForAllDocuments(3);
+		List<String> documentos = this.getDocumentosDistintos();
+		for(String documento : documentos){
+			double value = OkapiBM25(documento, query);
+			System.out.println(documento+" "+value);
+			
+		}
+		
+		
+		
+	}
+	
+	
+	public double TFIDF(String term, String document, int weightingScheme){
+		if(weightingScheme==1){
+			return this.termFrecuency(term, document, "raw frequency", -1.0)*this.InverseDocumentFrequency(term, "inverse document frequency");			
+		}else if(weightingScheme==2){
+			return this.termFrecuency(term, document, "log normalization", -1.0);
+			
+		}else if(weightingScheme==3){
+			return this.termFrecuency(term, document, "log normalization", -1.0)*this.InverseDocumentFrequency(term, "inverse document frequency");
+			
+		}
+		
+		
+		
+		return -1.0;
+	}
+	
+	
+	public int getCantidadDePalabrasDelDocumento(String documento){
+		int cantidadDePalabras = 0;
+		for(DiccionarioItem di : listaDeItems){
+			for(Documento d : di.getListaDeDocumentosQueContienenLaPalabraRaiz()){
+				if(documento.equals(d.getNombreDelDocumento())){
+					cantidadDePalabras = cantidadDePalabras + d.cantidadDeVecesQueSeRepiteLaPalabraRaiz();
+					
+					
+				}
+			}
+			
+			
+		}
+		return cantidadDePalabras;
+		
+	}
+	
+	
+	
+	public void setTFIDFForAllTermsForAllDocuments(int tFIDFScheme){
+		for(DiccionarioItem di : listaDeItems){
+			List<Documento> documentos = di.getListaDeDocumentosQueContienenLaPalabraRaiz();
+			for(Documento documento : documentos){
+				documento.setTFIDF(this.TFIDF(di.getPalabraRaiz(), documento.getNombreDelDocumento(), tFIDFScheme));
+			}
+		}
+	}
+	
+	
+	public void getKeyWordsForCorpus(int cantidadDeKeywords, int TFIDFScheme){
+		int verdaderaCantidadDeKeywords = cantidadDeKeywords;
+		
+		List<String> documentos = this.getDocumentosDistintos();
+		class PalabraTFIDF{
+			public String palabra;
+			public double TFIDF;
+			public PalabraTFIDF(String palabra, double TFIDF){
+				this.palabra = palabra;
+				this.TFIDF = TFIDF;
+			}
+			
+		}
+		
+		setTFIDFForAllTermsForAllDocuments(TFIDFScheme);
+		
+		for(String nombreDelDocumentoEnElQueEstoyParado : documentos){
+			List<PalabraTFIDF> words = new ArrayList<PalabraTFIDF>();
+			for(DiccionarioItem di : listaDeItems){
+				for(Documento doc : di.getListaDeDocumentosQueContienenLaPalabraRaiz()){
+					if(doc.getNombreDelDocumento().equals(nombreDelDocumentoEnElQueEstoyParado)){
+						words.add(new PalabraTFIDF(di.getPalabraRaiz(), doc.getTFIDF()));
+						
+					}
+				}
+				
+			}
+			
+			PalabraTFIDF temp;
+			for (int i = 0; i < words.size(); i++) {
+				for (int j = i; j < words.size() - 1; j++) {
+					if (words.get(i).TFIDF < words.get(j + 1).TFIDF) {
+						temp = words.get(j + 1);
+						words.set(j + 1, words.get(i));
+						words.set(i, temp);
+					}
+				}
+			}
+			
+			String line = "Las keywords de "+nombreDelDocumentoEnElQueEstoyParado+" son: ";
+			
+			//System.out.println("Para el documento "+nombreDelDocumentoEnElQueEstoyParado+" hay "+words.size()+" words");
+			
+			if(cantidadDeKeywords>=words.size()){
+				cantidadDeKeywords = words.size()-1;
+			}
+			
+			for(int i = 0; i<cantidadDeKeywords; i++){
+				line = line + words.get(i).palabra+" ";
+				
+				
+			}
+			System.out.println(line);
+			cantidadDeKeywords = verdaderaCantidadDeKeywords;
+		
+		}
+		
+	}
 
-	public void imprimirPalabrasRaizConCuantasVecesApareceEnCadaDocumento() {
-		for (DiccionarioItem item : listaDeItems) {
+	public void imprimirPalabrasRaizConCuantasVecesApareceEnCadaDocumento(int cantidadDePalabras) {
+		if(cantidadDePalabras>=listaDeItems.size()){
+			cantidadDePalabras = listaDeItems.size()-1;
+		}
+		
+		
+		
+		for (int i = 0 ; i<cantidadDePalabras; i++) {
+			DiccionarioItem item = listaDeItems.get(i);
 			String lineaAImprimir = "La palabra raiz " + item.getPalabraRaiz() + " se repite "
 					+ item.getCantidadDeVecesQueSeRepiteEnTodosLosDocumentos() + " veces: ";
 			for (Documento d : item.getListaDeDocumentosQueContienenLaPalabraRaiz()) {
@@ -126,6 +301,13 @@ public class Diccionario {
 	public double termFrecuency(String term, String document, String weightingScheme, double k){
 		
 		DiccionarioItem item = this.getDiccionarioItem(term);
+		
+		if(item == null){
+			
+			return -1.0;
+		}
+		
+		
 		List<Documento> documentos = item.getListaDeDocumentosQueContienenLaPalabraRaiz();
 		Documento documento = null;
 		for(Documento d : documentos){
@@ -150,12 +332,14 @@ public class Diccionario {
 			
 		}else if(weightingScheme.equals("double normalization K")){
 			return k+(1-k)*(documento.cantidadDeVecesQueSeRepiteLaPalabraRaiz()+this.getFrecuenciaDeLaPalabraQueSeRepiteMasVecesEnElDocumento(document).getCantidad());
+		}else if(weightingScheme.equals("cotelo")){
+			return documento.cantidadDeVecesQueSeRepiteLaPalabraRaiz()/this.getCantidadDePalabrasDelDocumento(document);
 		}
 		
 		return -1.0;
 	}
 
-	private PalabraCantidad getFrecuenciaDeLaPalabraQueSeRepiteMasVecesEnElDocumento(String document) {
+	public PalabraCantidad getFrecuenciaDeLaPalabraQueSeRepiteMasVecesEnElDocumento(String document) {
 		int mayorCantidadDeRepeticiones = 0;
 		String palabra = "";
 		for(DiccionarioItem item : listaDeItems){
@@ -213,8 +397,13 @@ public class Diccionario {
 		return elMasRepetido;
 	}
 	
-	
 	public int getCantidadDeDocumentos(){
+		return this.getDocumentosDistintos().size();
+		
+	}
+	
+	
+	public List<String> getDocumentosDistintos(){
 		List<String> documentosDistintos = new ArrayList<String>();
 		for (DiccionarioItem item : listaDeItems) {
 			List<Documento> documentos = item.getListaDeDocumentosQueContienenLaPalabraRaiz();
@@ -233,10 +422,10 @@ public class Diccionario {
 			}
 			
 		}
-		return documentosDistintos.size();
+		return documentosDistintos;
 	}
 
-	private double InverseDocumentFrequency(String term, String weightingScheme) {
+	public double InverseDocumentFrequency(String term, String weightingScheme) {
 		
 		DiccionarioItem item = this.getDiccionarioItem(term);
 		
@@ -244,7 +433,7 @@ public class Diccionario {
 			return -1.0;
 			
 		}
-		List<Documento> documentos = item.getListaDeDocumentosQueContienenLaPalabraRaiz();
+	//	List<Documento> documentos = item.getListaDeDocumentosQueContienenLaPalabraRaiz();
 		
 		
 		if(weightingScheme.equals("unary")){

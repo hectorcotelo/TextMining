@@ -3,9 +3,20 @@ import java.util.List;
 
 public class Documento {
 	
-	
+	private double TFIDF = 0.0;
 	private String nombreDelDocumento;
 	private List<PalabraCantidad> listaDePalabrasConSusCantidades;
+	
+	public void setTFIDF(double tfidf){
+		
+		this.TFIDF = tfidf;
+	}
+	
+	
+	public double getTFIDF(){
+		return this.TFIDF;
+		
+	}
 		
 	public Documento (String nombre){
 		this.nombreDelDocumento = nombre;

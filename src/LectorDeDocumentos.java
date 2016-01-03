@@ -25,6 +25,7 @@ public class LectorDeDocumentos {
 		    				||palabraEnCuestion.endsWith("”")
 		    				||palabraEnCuestion.endsWith(":")
 		    				||palabraEnCuestion.endsWith("!")
+		    				||palabraEnCuestion.endsWith("?")
 		    				||palabraEnCuestion.endsWith(")")
 		    				
 		    				
@@ -44,6 +45,8 @@ public class LectorDeDocumentos {
 		    				||palabraEnCuestion.startsWith("“")
 		    				||palabraEnCuestion.startsWith("¡")
 		    				||palabraEnCuestion.startsWith("(")
+		    				||palabraEnCuestion.startsWith("¿")
+		    				
 		    				){
 		    		
 		    			

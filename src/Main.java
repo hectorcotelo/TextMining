@@ -10,19 +10,23 @@ public class Main {
 
 	public static void main(String[] args) {
 		System.out.println("Hola Mundo!");
-		String directorioRaiz = "C:\\Users\\Héctor\\Desktop\\postulaciones\\plano\\falso\\";
+		String directorioRaiz = "C:\\Users\\Héctor\\Desktop\\postulaciones\\plano\\";
 
-		File f = new File(directorioRaiz);
-		ArrayList<String> names = new ArrayList<String>(Arrays.asList(f.list()));
+		BuscadorDeArchivosTxt bdat = new BuscadorDeArchivosTxt();
+		List<String> archivosTxt = bdat.getArchivosTxt(directorioRaiz);
 		LectorDeDocumentos ldd = new LectorDeDocumentos();
 		StopWords sw = new StopWords();
 		Diccionario diccionario = new Diccionario();
-		for (String name : names) {
+		for (String name : archivosTxt) {
 
-			System.out.println(name);
+		//	System.out.println(name);
 
 			
 			String documento = directorioRaiz + name;
+			
+			
+			
+			
 			List<String> palabrasDelDoc = ldd.leer(documento);
 			
 			palabrasDelDoc = sw.filtarStopWords(palabrasDelDoc);
@@ -42,21 +46,41 @@ public class Main {
 			}
 
 		}
-		diccionario.ordernarItemsPorCantidad();
+	//	diccionario.ordernarItemsPorCantidad();
 		// diccionario.imprimirEntradasConLaCantidadDeVecesQueSeRepiteEnTodaLaColeccion();
 		//diccionario.imprimirPalabrazRaizConSusDerivadas();
-		diccionario.imprimirPalabrasRaizConCuantasVecesApareceEnCadaDocumento();
+		//diccionario.imprimirPalabrasRaizConCuantasVecesApareceEnCadaDocumento(30);
 		
 		
-		diccionario.imprimirTermFrecuencysForAllSchemes("pedro", "C:\\Users\\Héctor\\Desktop\\postulaciones\\plano\\falso\\hector.txt");
+		//diccionario.imprimirTermFrecuencysForAllSchemes("pedro", "C:\\Users\\Héctor\\Desktop\\postulaciones\\plano\\falso\\hector.txt");
 			
 			
-		diccionario.imprimirInverseDocumentFrequencyForAllSchemes("pedro");
+		//diccionario.imprimirInverseDocumentFrequencyForAllSchemes("pedro");
 		
-		System.out.println("Le argegue la siguiente cantidad de Documentos al diccionario "+diccionario.getCantidadDeDocumentos());
+		//System.out.println("Le argegue la siguiente cantidad de Documentos al diccionario "+diccionario.getCantidadDeDocumentos());
+		//System.out.println("EL TFIDF DE jose EN EL DOC DEL hector.txt ES "+diccionario.TFIDF("maria", "C:\\Users\\Héctor\\Desktop\\postulaciones\\plano\\falso\\hector.txt", 3));
 		
+		
+		diccionario.getKeyWordsForCorpus(5, 3);
+		
+		System.out.println("En total tengo "+diccionario.getDiccionario().size()+" items indexados");
+		System.out.println("Hay  "+diccionario.getDocumentosDistintos().size()+" documentos procesados");
+		System.out.println("Hay  "+diccionario.cantidadDePalabrasDeTodoElCorpus()+" palabras procesadas");
+		
+		//System.out.println(diccionario.OkapiBM25("C:\\Users\\Héctor\\Desktop\\postulaciones\\plano\\airaup.txt", "brillar"));
+		
+		//System.out.println(diccionario.OkapiBM25("C:\\Users\\Héctor\\Desktop\\postulaciones\\plano\\4845.txt", "brillar"));
+		
+		diccionario.buscarDocumentos("liderazgo");
+		
+		
+		System.out.println("Cantidad promedioDePalabras "+diccionario.avgdl());
+		
+		diccionario.imprimirTFIDFParaTodosLosDocumentos("liderazgo");
 		
 		System.out.println("Chau Mundo!");
 	}
+	
+	
 
 }
